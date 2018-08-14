@@ -11,15 +11,15 @@ char local_addr[100];
 struct sockaddr_in6 dest;/* server_addr */
 struct sockaddr_in6 src;/* local_addr */
 
-int daemon;
+int daemonv;
 FILE *err;
 //#define DAEMON_LOG "/tmp/thclient.log"
 #define DAEMON_LOG "/dev/null"
 
 typedef enum {
-	IPv4,
-	IPv6,
-	DHCPv6
+  IPv4,
+  IPv6,
+  DHCPv6
 } MODE;
 
 extern MODE mode;

@@ -7,8 +7,8 @@
 #include "dhcp.h"
 
 struct interface {
-	char name[INTERFACE_NAME_LEN];
-	char addr[6];/* macaddr */
+  char name[INTERFACE_NAME_LEN];
+  char addr[6];/* macaddr */
 };
 
 struct interface *config_interface;
