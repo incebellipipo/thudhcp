@@ -131,14 +131,14 @@ void init_interfaces() {
 static int set_ipaddr(char *interface_name, struct sockaddr_in addr) {
   int s;
   if((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-    fprintf(err, "Error up %s :%m\n",interface_name, errno);
+    printf("Error up %s : %s\n",interface_name, strerror(errno));
     return -1;
   }
   struct ifreq ifr;
   strcpy(ifr.ifr_name, interface_name);
   memcpy(&ifr.ifr_ifru.ifru_addr, &addr, sizeof(struct sockaddr_in));
   if(ioctl(s, SIOCSIFADDR, &ifr) < 0) {
-    fprintf(err, "Error set %s ip :%m\n",interface_name, errno);
+    printf("Error set %s ip : %s\n",interface_name, strerror(errno));
     return -1;
   }
   return 0;
@@ -147,14 +147,14 @@ static int set_ipaddr(char *interface_name, struct sockaddr_in addr) {
 static int set_submask(char *interface_name, struct sockaddr_in mask) {
   int s;
   if((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-    fprintf(err, "Error up %s :%m\n",interface_name, errno);
+    printf("Error up %s : %s\n",interface_name, strerror(errno));
     return -1;
   }
   struct ifreq ifr;
   strcpy(ifr.ifr_name, interface_name);
   memcpy(&ifr.ifr_ifru.ifru_addr, &mask, sizeof(struct sockaddr_in));
   if(ioctl(s, SIOCSIFNETMASK, &ifr) < 0) {
-    fprintf(err, "Error set %s mask :%m\n",interface_name, errno);
+    printf("Error set %s mask : %s\n",interface_name, strerror(errno));
     return -1;
   }
   return 0;
@@ -208,7 +208,7 @@ static int route_add(char * interface_name, struct lease *lease)
   //skfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(ioctl(skfd, SIOCADDRT, &rt) < 0) 
   {
-    fprintf(err, "Error route add :%m\n", errno);
+    printf("Error route add : %s\n", strerror(errno));
     return -1;
   }
 }

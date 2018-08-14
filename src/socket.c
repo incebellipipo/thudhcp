@@ -21,7 +21,7 @@ void init_socket() {
   listen_raw_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
   if (listen_raw_fd < 0) {
     fprintf(err, "Failed to create listening raw socket.\n");
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   struct timeval timeout;
   timeout.tv_sec = RECV_TIMEOUT_SEC;
@@ -32,26 +32,26 @@ void init_socket() {
     struct sockaddr_in servaddr;
     if ((ipv4_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
       fprintf(err, "Failed to create ipv4 sockfd!\n");
-      exit(1);
+      exit(EXIT_FAILURE);
     }
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = htons(IPv4_CLIENT_PORT);
     if (bind(ipv4_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
-        //fprintf(err, "socket_init(): bind error\n");
-        //exit(1);
-      }
+      perror("Error socket(): ");
+      exit(EXIT_FAILURE);
+    }
       send4_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
       if (send4_fd < 0) {
-        fprintf(err, "Failed to create send4 socket.\n");
-        exit(1);
+        perror("Failed to create send4 socket.");
+        exit(EXIT_FAILURE);
       }
 //		}
   } else if (mode == IPv6) {
     if ((ipv6_fd = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-      fprintf(err, "Failed to create ipv6 sockfd!\n");
-      exit(1);
+      perror("Failed to create ipv6 sockfd!");
+      exit(EXIT_FAILURE);
     }
     struct sockaddr_in6 my_addr;
     bzero(&my_addr, sizeof(my_addr));
@@ -59,19 +59,19 @@ void init_socket() {
     my_addr.sin6_port = htons(IPv6_CLIENT_PORT);
     my_addr.sin6_addr = in6addr_any;
     if (bind(ipv6_fd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr_in6)) < 0) {
-      fprintf(err, "Failed to bind!\n");
-//			exit(1);
+      perror("Failed to bind!");
+			exit(EXIT_FAILURE);
     }
     send6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW);
     if (send6_fd < 0) {
-      fprintf(err, "Failed to create send6 socket.\n");
-      exit(1);
+      perror("Failed to create send6 socket.");
+      exit(EXIT_FAILURE);
     }
     setsockopt(send6_fd, SOL_SOCKET, SO_BINDTODEVICE, network_interface_name, strlen(network_interface_name));
   } else if (mode == DHCPv6) {
     if ((ipv6_fd = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-      fprintf(err, "Failed to create DHCPv6 sockfd!\n");
-      exit(1);
+      perror("Failed to create DHCPv6 sockfd!");
+      exit(EXIT_FAILURE);
     }
     struct sockaddr_in6 myAddr;
     bzero(&myAddr, sizeof(myAddr));
@@ -80,18 +80,17 @@ void init_socket() {
     myAddr.sin6_addr = in6addr_any;
     if (bind(ipv6_fd, (struct sockaddr*) &myAddr, sizeof(struct sockaddr_in6)) < 0) {
       fprintf(err, "Failed to bind!\n");
-//			exit(1);
+			exit(EXIT_FAILURE);
     }
     if ((send6_fd = socket(PF_INET6, SOCK_RAW, IPPROTO_RAW)) < 0) {
-      fprintf(err, "Failed to create send6 socket.\n");
-      exit(1);
+      perror("Failed to create send6 socket.");
+      exit(EXIT_FAILURE);
     }
     setsockopt(send6_fd, SOL_SOCKET, SO_BINDTODEVICE, network_interface_name, strlen(network_interface_name));
   }
 }
 
-void free_socket()
-{
+void free_socket() {
   if (listen_raw_fd) {
     close(listen_raw_fd);
     listen_raw_fd = 0;
@@ -264,12 +263,12 @@ void send_packet_ipv4(char *packet, int len) {
   struct sockaddr_ll device;
   if ((device.sll_ifindex = if_nametoindex(network_interface->name)) == 0) {
     fprintf(err, "Failed to resolve the index of %s.\n", network_interface->name);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   if (sendto(send4_fd, buf, total_len, 0, (struct sockaddr *)&device, sizeof(device)) < 0) {
     fprintf(err, "Failed to send ipv4 packet.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -278,7 +277,7 @@ void send_packet_ipv6(char *packet, int len)
 /* UDP socket
   if (sendto(ipv6_fd, packet, len, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) < 0) {
     fprintf(err, "Failed to send!\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 */
   memset(buf, 0, sizeof(buf));
@@ -300,7 +299,7 @@ void send_packet_ipv6(char *packet, int len)
 
   if (sendto(send6_fd, buf, len + 40 + 8, 0, (struct sockaddr *)&dest, sizeof(dest)) < 0) {
     fprintf(err, "Failed to send ipv6 packet.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -331,7 +330,7 @@ void send_packet_dhcpv6(char* packet, int len) {
   udp->check = htons(udpchecksum((char*) hdr, (char*) udp, len + 8 + sizeof(struct DHCPv6Header), 6));
   if (sendto(send6_fd, buf, len + 40 + 8 + sizeof(struct DHCPv6Header), 0, (struct sockaddr*) &dest, sizeof(dest)) < 0) {
     fprintf(err, "Failed to send DHCPv6 packet.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
